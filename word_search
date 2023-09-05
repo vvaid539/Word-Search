@@ -1,0 +1,203 @@
+import random
+
+# This code defines valid directions a word can travel.
+# Each direction is a tuple (dx, dy) that says how you change x and y 
+# coordinates to go in a given direction.
+RIGHT=(1, 0)       # to go right add 1 to x
+DOWN=(0,1)         # to go down add 1 to y
+RIGHT_DOWN=(1, 1)  # to go right_down add 1 to both x and y
+RIGHT_UP=(1,-1)    # to go right_up add 1 to x and subtract 1 from y
+DIRECTIONS = (RIGHT, DOWN, RIGHT_DOWN, RIGHT_UP)
+
+# Good use of these direction-tuples makes for much easier programs for this project
+
+def get_size(word_grid):
+    getSize = (len(word_grid[0]), len(word_grid))
+    return getSize
+
+def print_word_grid(word_grid):
+    for i in range(0, len(word_grid)):
+        for j in range(0, len(word_grid[0])):
+            print(word_grid[i][j], end = "")
+        print("");
+
+def copy_word_grid(word_grid):
+    newList = []
+    for i in range(0, len(word_grid)):
+        tempList = []
+        for j in range(0, len(word_grid[0])):
+            tempList.append(word_grid[i][j])
+        newList.append(tempList)
+    return newList
+
+def extract(word_grid, position, direction, max_len):
+    newString = ""
+    if (len(word_grid) < position[1] or len(word_grid[0]) < position[0]):
+        return newString
+    if (direction == RIGHT):
+        inBounds = True
+        y = position[0]
+        while (inBounds == True):
+            if (y == len(word_grid[0]) - 1 or len(newString) == max_len - 1):
+                inBounds = False
+            newString += word_grid[position[1]][y]
+            y += 1
+    elif (direction == DOWN):
+        inBounds = True
+        x = position[1]
+        while (inBounds == True):
+            if (x == len(word_grid) - 1 or len(newString) == max_len - 1):
+                inBounds = False
+            newString += word_grid[x][position[0]]
+            x += 1
+    elif (direction == RIGHT_UP):
+        inBounds = True
+        y = position[0]
+        x = position[1]
+        numWords = 0
+        while (inBounds == True):
+            if (y == len(word_grid[0]) - 1 or numWords == max_len - 1):
+                inBounds = False
+            elif (x == 0):
+                inBounds = False
+            newString += word_grid[x][y]
+            numWords += 1
+            y += 1
+            x -= 1
+    elif (direction == RIGHT_DOWN):
+        inBounds = True
+        y = position[0]
+        x = position[1]
+        numWords = 0
+        while (inBounds == True):
+            if (y == len(word_grid[0]) - 1 or numWords == max_len - 1):
+                inBounds = False
+            elif (x == len(word_grid) - 1):
+                inBounds = False
+            newString += word_grid[x][y]
+            numWords += 1
+            y += 1
+            x += 1
+    return newString
+
+
+def find(word_grid, word):
+    for i in range(0, len(word_grid[0])):
+        for j in range(0, len(word_grid)):
+            if(extract(word_grid, (i, j), RIGHT, len(word)) == word):
+                return ((i,j), RIGHT)
+            elif(extract(word_grid, (i, j), DOWN, len(word)) == word):
+                return ((i,j), DOWN)
+            elif (extract(word_grid, (i, j), RIGHT_UP, len(word)) == word):
+                return ((i, j), RIGHT_UP)
+            elif(extract(word_grid, (i, j), RIGHT_DOWN, len(word)) == word):
+                return ((i, j), RIGHT_DOWN)
+    return None
+
+def show_solution(word_grid, word):
+    value = find(word_grid, word)
+    if(value != None):
+        newGrid = copy_word_grid(word_grid)
+        upperWord = word.upper()
+        print(upperWord, "can be found as below")
+        if(value[1] == RIGHT):
+            for i in range(value[0][0], len(word) + value[0][0]):
+                newGrid[value[0][1]][i] = newGrid[value[0][1]][i].upper()
+        elif (value[1] == DOWN):
+            for i in range(value[0][1], len(word) + value[0][1]):
+                newGrid[i][value[0][1]] = newGrid[value[0][1]][i].upper()
+        elif(value[1] == RIGHT_UP):
+            tempValue = value[0][1]
+            for i in range(value[0][0], len(word) + value[0][0]):
+                newGrid[tempValue][i] = newGrid[tempValue][i].upper()
+                tempValue -= 1
+        elif(value[1] == RIGHT_DOWN):
+            tempValue = value[0][1]
+            for i in range(value[0][0], len(word) + value[0][0]):
+                newGrid[tempValue][i] = newGrid[tempValue][i].upper()
+                tempValue += 1
+        print_word_grid(newGrid)
+    else:
+        print(word , "is not found in this word search")
+
+def make_empty_grid(width, height):
+    newList = []
+    for i in range(0, height):
+        tempList = []
+        for j in range(0,width):
+            tempList.append("?")
+        newList.append(tempList)
+    return newList
+
+def can_add_word(word_grid, word, position, direction):
+    isTrue = True
+    counter = 1
+    wordString = extract(word_grid, position, direction, len(word))
+    if(wordString != None):
+        if(len(wordString) < len(word)):
+            return False
+        for i in range(0, len(word)):
+            if(wordString[i] == word[i] or wordString[i] == "?"):
+                counter += 1
+            else:
+                isTrue = False
+    else:
+        isTrue = False
+    return isTrue
+
+
+
+def do_add_word(word_grid, word, position, direction):
+    wordIndexCounter = 0
+    if(can_add_word(word_grid, word, position, direction) ==  True):
+        if (direction == RIGHT):
+            for i in range(position[0], len(word) + position[0]):
+                word_grid[position[1]][i] = word[wordIndexCounter]
+                wordIndexCounter += 1
+        elif (direction == DOWN):
+            for i in range(position[1], len(word) + position[1]):
+                word_grid[i][position[0]] = word[wordIndexCounter]
+                wordIndexCounter += 1
+        elif (direction == RIGHT_UP):
+            tempValue = position[1]
+            for i in range(position[0], len(word) + position[0]):
+                word_grid[tempValue][i] = word[wordIndexCounter]
+                wordIndexCounter += 1
+                tempValue -= 1
+        elif (direction == RIGHT_DOWN):
+            tempValue = position[1]
+            for i in range(position[0], len(word) + position[0]):
+                word_grid[tempValue][i] = word[wordIndexCounter]
+                wordIndexCounter += 1
+                tempValue += 1
+    return word_grid
+
+
+def fill_blanks(word_grid):
+    string = "abcdefghijklmnopqrstuvwxyz"
+    for i in range(0, len(word_grid)):
+        for j in range(0, len(word_grid[0])):
+            if(word_grid[i][j] == "?"):
+                word_grid[i][j] = random.choice(string)
+
+def add_word(word_grid, word):
+    ''' Attempts to '''
+    width, height = get_size(word_grid)
+    for attempt_num in range(50):
+        direction = random.choice(DIRECTIONS)
+        x = random.randrange(width)
+        y = random.randrange(height)
+        location = (x, y)
+        if can_add_word(word_grid, word, location, direction):
+            do_add_word(word_grid, word, location, direction)
+            return True
+    return False
+
+def generate(width, height, words):
+    words_actual = []
+    word_grid = make_empty_grid(width, height)
+    for word in words:
+        if add_word(word_grid, word):
+            words_actual.append(word)
+    fill_blanks(word_grid)
+    return word_grid, words_actual
